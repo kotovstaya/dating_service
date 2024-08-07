@@ -1,0 +1,59 @@
+version: '3.3'
+
+
+services:
+
+  db:
+    image: postgres:13
+    hostname: db
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    networks:
+      - common_network
+
+  llm_service:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile_llm
+    image: llm_service
+    hostname: llm_service
+    # command: tail -F anything
+    entrypoint: ./entrypoint-llm-service.sh
+    volumes:
+      - /home/ubuntu/hugging_face_cache:/root/.cache/huggingface
+    ports:
+      - 4321:4321
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - common_network
+
+  telegram_bot:
+    build:
+        context: .
+        dockerfile: ./deploy/Dockerfile_tg
+    image: telegram_bot
+    hostname: telegram_bot
+    # command: tail -F anything
+    entrypoint: ./entrypoint-tg-service.sh
+    depends_on:
+      - db
+      - llm_service
+    tty: true
+    networks:
+      - common_network
+
+
+networks:
+  common_network:
+    driver: bridge

@@ -1,0 +1,14 @@
+FROM dating_service_simple_image
+
+RUN mkdir -p /dating_service
+COPY ./setup_llm.py /dating_service/setup_control.py
+COPY ./requirements.txt /dating_service/requirements.txt
+COPY ./dating_control /dating_service/dating_control
+COPY ./.env /dating_service/.env
+COPY ./service_tg.py /dating_service/service_tg.py
+COPY entrypoint-tg-service.sh /dating_service/entrypoint-tg-service.sh
+
+WORKDIR /dating_service
+RUN chmod 777 entrypoint-tg-service.sh
+RUN python3 -m pip install -r /dating_service/requirements.txt
+RUN python3 setup_control.py develop
