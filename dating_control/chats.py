@@ -1,36 +1,39 @@
-import json
 import logging
-import os
+import re
 from abc import ABC, abstractmethod
 
-import requests
 from dotenv import load_dotenv
+from langchain.chains import LLMChain
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate
 
+from dating_control.llms import CustomLLM
 from dating_control.utils import StdOutHandler
 
 load_dotenv()
 
 
-class CustomChain:
-    def __init__(self):
-        self.url: str = os.getenv("LOCAL_LLM_URL")
+class CustomLLMChain:
+    def __init__(self, llm: CustomLLM, prompt: str, verbose=False) -> None:
+        self.llm = llm
+        self.prompt = prompt
+        self.verbose = verbose
+        self.inner_chain = LLMChain(llm=self.llm, prompt=self.prompt, verbose=self.verbose)
+        self.history = "empty history"
 
-        self.role: str = """
-            Your name is DatingBot.
-            You should just ask questions about a person who you are talking right now.
-            Use only 10 words.
+    def _update_history(self, request: str, response: str):
+        self.history = f"{self.history}\n{request}\n{response}"
 
-            ##################
+    def run(self, **kwargs):
+        response_full = self.inner_chain.run(text=kwargs["text"], history=self.history)
 
-            {prompt}
+        dialog = response_full[list(re.finditer("Human", response_full))[0].end():]
+        human_request = "Human: " + dialog[list(re.finditer("end_history", dialog))[-1].end(): list(re.finditer("BfBot response", dialog))[-1].start()].strip()  # noqa: E501
+        response = dialog[list(re.finditer("BfBot response", dialog))[-1].start():].strip()
+        outer_response = dialog[list(re.finditer("BfBot response", dialog))[-1].end():].strip()
 
-            ##################
-            Response:
-        """
+        self._update_history(human_request, response)
 
-    def run(self, prompt: str) -> str:
-        resp = requests.post(self.url, data=json.dumps({"prompt": self.role.format(prompt=prompt)}))
-        return resp.json()["response"]
+        return outer_response
 
 
 class BaseChat(ABC):
@@ -74,13 +77,37 @@ class LocalUserChat(BaseChat):
         self._init_chains()
 
     def _init_model(self) -> None:
-        ...
+        self.model = CustomLLM()
 
     def _init_memory(self) -> None:
         ...
 
     def _init_prompts(self) -> None:
-        ...
+        self.prompt = ChatPromptTemplate(
+            messages=[
+                SystemMessagePromptTemplate.from_template(
+        """
+        You are a boyfriend bot. Your name is bfBot. 
+        Introduce yourself once. 
+        You ask questions and try to make a human more happy.
+        try to find out about the history of people.
+        YOU MUST GIVE A RESPONSE. THATS ALL.
+        """
+                ),
+                HumanMessagePromptTemplate.from_template(
+                    """
+        start history
+
+{history}
+
+        end_history
+
+        {text}
+        
+BfBot response:"""
+                ),
+            ],
+        )
 
     def _init_chains(self) -> None:
-        self.main_chain = CustomChain()
+        self.main_chain = CustomLLMChain(self.model, self.prompt, verbose=False)

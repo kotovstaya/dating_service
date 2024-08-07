@@ -11,7 +11,6 @@ from aiogram.types import Message
 
 from dating_control.main_flow import DefaultMainFlow
 
-
 TOKEN = os.getenv("TG_TOKEN")
 dp = Dispatcher()
 
@@ -24,7 +23,6 @@ async def command_start_handler(message: Message) -> None:
 @dp.message()
 async def echo_handler(message: Message) -> None:
     try:
-        response = "ff"
         response = DefaultMainFlow.run(message.from_user.id, message.text)
         await message.answer(response)
     except TypeError as ex:

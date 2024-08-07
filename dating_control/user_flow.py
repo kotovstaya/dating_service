@@ -1,9 +1,8 @@
+import logging
 from abc import ABC
 
 from dating_control.chats import LocalUserChat
 from dating_control.utils import StdOutHandler
-import logging
-
 
 logger = logging.getLogger("user_flow")
 logger.addHandler(StdOutHandler)
@@ -20,6 +19,5 @@ class DefaultUserFlow(BaseUserFlow):
         self.chat = LocalUserChat()
 
     def run(self, context: str) -> str:
-        logger.info(f"DefaultuserFlow context: {context}")
-        response = self.chat.main_chain.run(context)
+        response = self.chat.main_chain.run(text=context)
         return response

@@ -11,3 +11,5 @@ aiogram==3.10.0
 psycopg2-binary
 SQLAlchemy==2.0.32
 requests
+langchain==0.2.12
+langchain-core==0.2.28
