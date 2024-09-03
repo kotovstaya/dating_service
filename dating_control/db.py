@@ -2,14 +2,14 @@ import datetime
 import os
 
 from dotenv import load_dotenv
-from sqlalchemy import DateTime, Integer, Text, create_engine
+from sqlalchemy import DateTime, BigInteger, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 load_dotenv()
 
 
 engine = create_engine(
-    f"postgresql://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@db:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}",  # noqa: E501
+    f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@db:{os.getenv('DB_PORT')}/{os.getenv('POSTGRES_DB')}",  # noqa: E501
     echo=True
 )
 
@@ -21,8 +21,8 @@ class Base(DeclarativeBase):
 class Conversation(Base):
     __tablename__ = "conversation"
 
-    id: Mapped[int] = mapped_column(Integer(), primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer())
+    id: Mapped[int] = mapped_column(BigInteger(), primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BigInteger())
     user_request: Mapped[str] = mapped_column(Text())
     bot_response: Mapped[str] = mapped_column(Text())
     log_ts: Mapped[datetime.datetime] = mapped_column(DateTime())
@@ -41,6 +41,9 @@ def add_conversation(
     bot_response: str,
 ) -> None:
     with Session(engine) as session:
+        print(f"user_id: {user_id}")
+        print(f"user_request: {user_request}")
+        print(f"bot_response: {bot_response}")
         conv = Conversation(
             user_id=user_id,
             user_request=user_request,

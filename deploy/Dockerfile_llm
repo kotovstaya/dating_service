@@ -4,7 +4,6 @@ RUN mkdir -p /dating_service
 COPY ./setup_llm.py /dating_service/setup_llm.py
 COPY ./requirements_llm.txt /dating_service/requirements_llm.txt
 COPY ./dating_llm /dating_service/dating_llm
-COPY ./.env /dating_service/.env
 COPY ./service_llm.py /dating_service/service_llm.py
 COPY entrypoint-llm-service.sh /dating_service/entrypoint-llm-service.sh
 
