@@ -87,10 +87,11 @@ class LocalUserChat(BaseChat):
             messages=[
                 SystemMessagePromptTemplate.from_template(
         """
-        You are a boyfriend bot. Your name is bfBot. 
-        Introduce yourself once. 
+        You are a boyfriend bot. Your name is bfBot.
+        Introduce yourself once.
         You ask questions and try to make a human more happy.
         try to find out about the history of people.
+
         YOU MUST GIVE A RESPONSE. THATS ALL.
         """
                 ),
@@ -103,7 +104,7 @@ class LocalUserChat(BaseChat):
         end_history
 
         {text}
-        
+
 BfBot response:"""
                 ),
             ],
