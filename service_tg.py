@@ -4,7 +4,8 @@ from aiogram import Bot, Dispatcher, html, Router
 from aiogram.client.default import DefaultBotProperties
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import CommandStart
+from aiogram.filters import Command
 from aiogram.types import Message
 
 from dating_control.main_flow import DefaultMainFlow
@@ -35,18 +36,19 @@ async def command_start_handler(message: Message) -> None:
 
 @router.message(Command("cache"))
 async def command_cache_handler(message: Message) -> None:
-    if len(list(main_flow_object.users_cache._user_2_time.keys())):
-        await message.answer(",".join([str(el) for el in list(main_flow_object.users_cache._user_2_time.keys())]))
+    obj = main_flow_object.users_cache._redis_client.get(str(message.from_user.id))
+    if obj:
+        await message.answer("cache exists")
     else:
         await message.answer("cache is empty")
 
 
-@router.message(Command("clear_cache"))
-async def command_clear_cache_handler(message: Message) -> None:
-    del main_flow_object.users_cache._user_2_time[message.from_user.id]
-    del main_flow_object.users_cache._user_2_flow[message.from_user.id]
+# @router.message(Command("clear_cache"))
+# async def command_clear_cache_handler(message: Message) -> None:
+#     del main_flow_object.users_cache._user_2_time[message.from_user.id]
+#     del main_flow_object.users_cache._user_2_flow[message.from_user.id]
 
-    await message.answer("cache was cleared")
+#     await message.answer("cache was cleared")
 
 
 @router.message()

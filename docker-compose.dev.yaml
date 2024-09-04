@@ -2,7 +2,16 @@ version: '3.3'
 
 
 services:
-
+  cache:
+    image: redis:latest
+    hostname: cache
+    env_file:
+      - .env.dev
+    ports:
+      - 6379:6379
+    networks:
+      - common_network
+      
   db:
     image: postgres:13
     hostname: db

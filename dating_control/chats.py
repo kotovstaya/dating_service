@@ -29,7 +29,7 @@ class CustomLLMChain:
         self.history = f"{self.history}\n{request}\n{response}"
 
     def run(self, **kwargs):
-        for tries in range(3)
+        for tries in range(3):
             response_full = self.inner_chain.run(text=kwargs["text"], history=self.history)
             if len(response_full):
                 outer_response = response_full.strip()
