@@ -63,7 +63,7 @@ class BaseTextGenerationLLM(BaseTextGenerationLLM):
             do_sample=True,
             max_new_tokens=100,
             temperature=0.98,
-            top_k=50,
+            top_k=4,
             top_p=0.95,
             num_return_sequences=1,
         )
