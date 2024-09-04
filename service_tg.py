@@ -1,5 +1,5 @@
 import os
-
+import asyncio
 from aiogram import Bot, Dispatcher, Router, html
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -24,13 +24,23 @@ main_flow_object = DefaultMainFlow(10)
 
 router = Router()
 
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
 
 async def on_startup(bot: Bot) -> None:
     await bot.set_webhook(f"{WEBHOOK_URL}")
 
 
+# Функция для проверки условия и отправки сообщения
+async def check_condition_and_send_message(chat_id: int):
+    while True:
+        await bot.send_message(chat_id, "Спам-спам")
+        await asyncio.sleep(10)
+
+
 @router.message(CommandStart())
 async def command_start_handler(message: Message) -> None:
+    # asyncio.create_task(check_condition_and_send_message(message.chat.id))
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 
@@ -43,14 +53,6 @@ async def command_cache_handler(message: Message) -> None:
         await message.answer("cache is empty")
 
 
-# @router.message(Command("clear_cache"))
-# async def command_clear_cache_handler(message: Message) -> None:
-#     del main_flow_object.users_cache._user_2_time[message.from_user.id]
-#     del main_flow_object.users_cache._user_2_flow[message.from_user.id]
-
-#     await message.answer("cache was cleared")
-
-
 @router.message()
 async def message_handler(message: Message) -> None:
     try:
@@ -58,13 +60,16 @@ async def message_handler(message: Message) -> None:
         await message.answer(response)
     except TypeError as ex:
         await message.answer(str(ex))
+        
+        
+async def send_custom_message(chat_id: int, text: str):
+    await bot.send_message(chat_id, text)
 
 
 def main() -> None:
     dp = Dispatcher()
     dp.include_router(router)
     dp.startup.register(on_startup)
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     app = web.Application()
     webhook_requests_handler = SimpleRequestHandler(dispatcher=dp, bot=bot)
     webhook_requests_handler.register(app, path=WEBHOOK_PATH)
