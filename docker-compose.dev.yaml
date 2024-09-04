@@ -2,6 +2,22 @@ version: '3.3'
 
 
 services:
+  nginx:
+    image: nginx:latest
+    hostname: nginx
+    env_file:
+      - .env.dev
+    ports:
+      - 80:80
+    volumes:
+      - /etc/nginx/sites-enabled/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/ssl/certs/dating_service-selfsigned.crt:/etc/ssl/certs/dating_service-selfsigned.crt
+      - /etc/ssl/private/dating_service-selfsigned.key:/etc/ssl/private/dating_service-selfsigned.key
+    networks:
+      - common_network
+    depends_on:
+      - telegram_bot
+
   cache:
     image: redis:latest
     hostname: cache
