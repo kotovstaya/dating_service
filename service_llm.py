@@ -26,12 +26,9 @@ model = BaseTextGenerationLLM(
 )
 
 
-@app.get("/")
-async def root():
-    return {"message": "What is your favorite color?"}
-
-
+# curl  -X POST http://localhost:4321/query -d '{"prompt":"how are you?"}' -H "Content-Type: application/json"
 @app.post("/query")
 async def predict(query: Query):
     response = model.generate(query.prompt)
-    return {"response": response}
+    query_length = len(query.prompt)
+    return {"response": response[query_length + 1:]}

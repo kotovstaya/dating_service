@@ -1,15 +1,14 @@
-import logging
 import os
-import sys
 from aiohttp import web
 from aiogram import Bot, Dispatcher, html, Router
 from aiogram.client.default import DefaultBotProperties
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import Message
 
 from dating_control.main_flow import DefaultMainFlow
+from dating_control.utils import get_logger
 
 TOKEN = os.getenv("TG_TOKEN")
 WEBHOOK_HOST = os.getenv("WEBHOOK_HOST")
@@ -17,6 +16,10 @@ WEB_SERVER_PORT = int(os.getenv("WEB_SERVER_PORT"))
 WEBHOOK_PATH = '/webhook'
 WEB_SERVER_HOST = "0.0.0.0"
 WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
+
+
+logger = get_logger("service_tg.py")
+main_flow_object = DefaultMainFlow(10)
 
 router = Router()
 
@@ -30,10 +33,26 @@ async def command_start_handler(message: Message) -> None:
     await message.answer(f"Hello, {html.bold(message.from_user.full_name)}!")
 
 
+@router.message(Command("cache"))
+async def command_cache_handler(message: Message) -> None:
+    if len(list(main_flow_object.users_cache._user_2_time.keys())):
+        await message.answer(",".join([str(el) for el in list(main_flow_object.users_cache._user_2_time.keys())]))
+    else:
+        await message.answer("cache is empty")
+
+
+@router.message(Command("clear_cache"))
+async def command_clear_cache_handler(message: Message) -> None:
+    del main_flow_object.users_cache._user_2_time[message.from_user.id]
+    del main_flow_object.users_cache._user_2_flow[message.from_user.id]
+
+    await message.answer("cache was cleared")
+
+
 @router.message()
 async def message_handler(message: Message) -> None:
     try:
-        response = DefaultMainFlow.run(message.from_user.id, message.text)
+        response = main_flow_object.run(message.from_user.id, message.text, save=True)
         await message.answer(response)
     except TypeError as ex:
         await message.answer(str(ex))
@@ -52,5 +71,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     main()

@@ -1,11 +1,15 @@
 import os
 from typing import Any, Dict, List, Optional
-
+import json
+import requests
 from dotenv import load_dotenv
 from langchain_core.callbacks.manager import CallbackManagerForLLMRun
 from langchain_core.language_models.llms import LLM
 
 load_dotenv()
+
+
+llm_url = os.getenv("LOCAL_LLM_URL")
 
 
 class CustomLLM(LLM):
@@ -18,10 +22,7 @@ class CustomLLM(LLM):
         run_manager: Optional[CallbackManagerForLLMRun] = None,
         **kwargs: Any,
     ) -> str:
-        import json
-
-        import requests
-        resp = requests.post(os.getenv("LOCAL_LLM_URL"), data=json.dumps({"prompt": prompt}))
+        resp = requests.post(llm_url, data=json.dumps({"prompt": prompt}))
         if stop is not None:
             raise ValueError("stop kwargs are not permitted.")
         return resp.json()["response"]

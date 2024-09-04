@@ -1,19 +1,16 @@
-import logging
 from abc import ABC
-from typing import Dict
 
 from dotenv import load_dotenv
 
-from dating_control.db import add_conversation, init_database
-from dating_control.user_flow import BaseUserFlow, DefaultUserFlow
-from dating_control.utils import StdOutHandler
+
+from dating_control.db import append_request_response, init_database
+from dating_control.utils import get_logger
+from dating_control.user_cache import UserCache
 
 load_dotenv()
 init_database()
 
-logger = logging.getLogger("main_flow")
-logger.addHandler(StdOutHandler)
-logger.setLevel(logging.DEBUG)
+logger = get_logger("main_flow.py")
 
 
 class BaseMainFlow(ABC):
@@ -21,18 +18,13 @@ class BaseMainFlow(ABC):
 
 
 class DefaultMainFlow(BaseMainFlow):
-    cache: Dict[str, BaseUserFlow] = {}
+    def __init__(self, sleep_seconds: int = 10) -> None:
+        self.users_cache = UserCache(sleep_seconds)
+        self.users_cache.start()
 
-    @classmethod
-    def update_cache(cls, user_id: int):
-        if user_id not in cls.cache.keys():
-            cls.cache[user_id] = DefaultUserFlow()
-
-    @classmethod
-    def run(cls, user_id, context) -> None:
-        if cls.cache.get(user_id, None) is None:
-            cls.update_cache(user_id)
-        current_user_flow = cls.cache[user_id]
-        response = current_user_flow.run(context)
-        add_conversation(user_id, context, response)
+    def run(self, user_id: int, request: str, save: bool = True) -> str:
+        current_user_flow = self.users_cache.get_user_flow(user_id)
+        response = current_user_flow.run(request)
+        if save:
+            append_request_response(user_id, request, response)
         return response

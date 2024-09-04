@@ -1,11 +1,15 @@
 import datetime
 import os
+from typing import Optional
+from dating_control.utils import get_logger
 
 from dotenv import load_dotenv
 from sqlalchemy import DateTime, BigInteger, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
 load_dotenv()
+
+logger = get_logger("db.py")
 
 
 engine = create_engine(
@@ -35,15 +39,8 @@ def init_database():
     Base.metadata.create_all(engine)
 
 
-def add_conversation(
-    user_id: int,
-    user_request: str,
-    bot_response: str,
-) -> None:
+def append_request_response(user_id: int, user_request: str, bot_response: str) -> None:
     with Session(engine) as session:
-        print(f"user_id: {user_id}")
-        print(f"user_request: {user_request}")
-        print(f"bot_response: {bot_response}")
         conv = Conversation(
             user_id=user_id,
             user_request=user_request,
@@ -52,3 +49,23 @@ def add_conversation(
         )
         session.add_all([conv])
         session.commit()
+
+
+def get_user_previous_conversation(user_id: int) -> Optional[str]:
+    with Session(engine) as session:
+        rows = (
+            session
+            .query(Conversation)
+            .filter(Conversation.user_id == user_id)
+            .order_by(Conversation.log_ts.desc())
+            .limit(10)
+            .all()
+        )
+
+        history = ""
+        if len(rows):
+            for row in rows[::-1]:
+                history += f"Request: {row.user_request} \n Response: {row.bot_response} \n\n"
+        logger.info(f"conversation from db: {history}")
+
+        return None if history == "" else history
