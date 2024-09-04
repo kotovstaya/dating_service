@@ -1,12 +1,12 @@
 import os
-from aiohttp import web
-from aiogram import Bot, Dispatcher, html, Router
+
+from aiogram import Bot, Dispatcher, Router, html
 from aiogram.client.default import DefaultBotProperties
-from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
-from aiogram.filters import Command
+from aiogram.filters import Command, CommandStart
 from aiogram.types import Message
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
 
 from dating_control.main_flow import DefaultMainFlow
 from dating_control.utils import get_logger

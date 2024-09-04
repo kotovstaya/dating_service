@@ -5,7 +5,6 @@ from redis import Redis
 from dating_control.user_flow import BaseUserFlow, DefaultUserFlow
 from dating_control.utils import get_logger
 
-
 logger = get_logger("user_cache.py")
 
 

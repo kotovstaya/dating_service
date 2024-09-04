@@ -1,11 +1,12 @@
 import datetime
 import os
 from typing import Optional
-from dating_control.utils import get_logger
 
 from dotenv import load_dotenv
-from sqlalchemy import DateTime, BigInteger, Text, create_engine
+from sqlalchemy import BigInteger, DateTime, Text, create_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
+
+from dating_control.utils import get_logger
 
 load_dotenv()
 

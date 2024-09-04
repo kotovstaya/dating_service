@@ -1,14 +1,11 @@
-import logging
 from abc import ABC
 
 import torch
 from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
 
-from dating_llm.utils import StdOutHandler
+from dating_llm.utils import get_logger
 
-logger = logging.getLogger("llm_service")
-logger.addHandler(StdOutHandler)
-logger.setLevel(logging.DEBUG)
+logger = get_logger("llm_service")
 
 
 class BaseTextGenerationLLM(ABC):
@@ -22,6 +19,7 @@ class BaseTextGenerationLLM(BaseTextGenerationLLM):
         torch_dtype=torch.float16,
         device_map: str = "cuda",
     ) -> None:
+
         super().__init__()
         logger.info(f"model_name: {model_name}")
         self.model_name = model_name
@@ -67,7 +65,4 @@ class BaseTextGenerationLLM(BaseTextGenerationLLM):
             top_p=0.95,
             num_return_sequences=1,
         )
-        print(f"sequences[0]: {sequences[0]}")
-        response = sequences[0]['generated_text']
-        print(f"response: {response}")
-        return response
+        return sequences[0]['generated_text']

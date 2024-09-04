@@ -1,9 +1,8 @@
 from abc import ABC
 
-from dating_control.chats import LocalUserChat, HistorySummaryChat
-from dating_control.utils import get_logger
+from dating_control.chats import HistorySummaryChat, LocalUserChat
 from dating_control.db import get_user_previous_conversation
-
+from dating_control.utils import get_logger
 
 logger = get_logger("user_flow.py")
 
