@@ -19,7 +19,10 @@ services:
       - telegram_bot
 
   cache:
-    image: redis:latest
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile_cache
+    image: cache
     hostname: cache
     env_file:
       - .env.dev

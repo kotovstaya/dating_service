@@ -3,8 +3,8 @@ from abc import ABC
 
 from dotenv import load_dotenv
 
+from dating_control.caches import RedisUserCache
 from dating_control.db import append_request_response, init_database
-from dating_control.user_cache import RedisUserCache
 from dating_control.utils import get_logger
 
 load_dotenv()
