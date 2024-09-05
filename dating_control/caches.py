@@ -10,7 +10,7 @@ logger = get_logger("caches.py")
 
 
 class RedisUserCache:
-    def __init__(self, host="cache", port: int = 6379, sleep_seconds: int = 10, db: int = 0) -> None:
+    def __init__(self, host:str = "cache", port: int = 6379, sleep_seconds: int = 10, db: int = 0) -> None:
         self._redis_client = Redis(host=host, port=port, db=db)
         self._store_seconds = sleep_seconds
 
@@ -35,18 +35,18 @@ class RedisUserCache:
 
 
 class RedisUserLongMissingNotifier:
-    def __init__(self, host="cache", port: int = 6379, sleep_seconds: int = 10, db: int = 0) -> None:
+    def __init__(self, host: str = "cache", port: int = 6379, sleep_seconds: int = 10, db: int = 0) -> None:
         self.client = None
         self.host = host
         self.port = port
         self.db = db
         self._store_seconds = sleep_seconds
 
-    async def _init_client(self):
+    async def _init_client(self) -> None:
         self.client = await aioredis.from_url(f'redis://{self.host}:{self.port}/{self.db}')
         await self.client.config_set('notify-keyspace-events', 'KEx')
 
-    async def handle_events(self, bot):
+    async def handle_events(self, bot) -> None:
         await self._init_client()
         try:
             pubsub = self.client.pubsub()
