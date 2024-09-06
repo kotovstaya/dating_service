@@ -40,7 +40,7 @@ def init_database():
     Base.metadata.create_all(engine)
 
 
-def append_request_response(user_id: int, user_request: str, bot_response: str) -> None:
+async def append_request_response(user_id: int, user_request: str, bot_response: str) -> None:
     with Session(engine) as session:
         conv = Conversation(
             user_id=user_id,
@@ -52,7 +52,7 @@ def append_request_response(user_id: int, user_request: str, bot_response: str) 
         session.commit()
 
 
-def get_user_previous_conversation(user_id: int) -> Optional[str]:
+async def get_user_previous_conversation(user_id: int) -> Optional[str]:
     with Session(engine) as session:
         rows = (
             session

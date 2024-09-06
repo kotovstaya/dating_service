@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 
 from dating_control.caches import RedisUserLongMissingNotifier
 from dating_control.main_flow import DefaultMainFlow
+from dating_control.user_flow import DefaultUserFlow
 from dating_control.utils import get_logger
 
 load_dotenv()
@@ -36,7 +37,10 @@ router = Router()
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
-main_flow_object = DefaultMainFlow(cache_host=CACHE_HOST, cache_port=CACHE_PORT, cache_store_seconds=CACHE_STORE_SECONDS)
+main_flow_object = DefaultMainFlow(
+    cache_host=CACHE_HOST, cache_port=CACHE_PORT, cache_store_seconds=CACHE_STORE_SECONDS,
+    user_flow_class_constructor=DefaultUserFlow,
+)
 
 
 missing_cache_notifier = RedisUserLongMissingNotifier(
@@ -56,7 +60,7 @@ async def command_start_handler(message: Message) -> None:
 
 @router.message(Command("cache"))
 async def command_cache_handler(message: Message) -> None:
-    obj = await main_flow_object.users_cache._redis_client.get(str(message.from_user.id))
+    obj = await main_flow_object.is_user_in_cache(message.from_user.id)
     if obj:
         await message.answer("cache exists")
     else:

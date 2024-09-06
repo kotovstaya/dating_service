@@ -1,37 +1,40 @@
 import pickle
+from typing import Any
 
 import aioredis
 
-from dating_control.user_flow import BaseUserFlow, DefaultUserFlow
+from dating_control.user_flow import BaseUserFlow
 from dating_control.utils import get_logger
 
 logger = get_logger("caches.py")
 
 
 class RedisUserCache:
-    def __init__(self, host:str = "cache", port: int = 6379, sleep_seconds: int = 10, db: int = 0) -> None:
-        self._redis_client = aioredis.from_url(f"redis://{host}:{port}/{db}")
+    def __init__(
+        self,
+        host: str = "cache",
+        port: int = 6379,
+        sleep_seconds: int = 10,
+        db: int = 0,
+    ) -> None:
+        self._client = aioredis.from_url(f"redis://{host}:{port}/{db}")
         self._store_seconds = sleep_seconds
 
-    async def _get_cached_flow(self, user_id: int) -> BaseUserFlow:
-        serialized_flow_class = await self._redis_client.get(str(user_id))
-        await self._redis_client.setex(str(user_id), self._store_seconds, serialized_flow_class)
-        return pickle.loads(serialized_flow_class)
+    @staticmethod
+    def _cast_key_type(key: Any) -> str:
+        return key if isinstance(key, str) else str(key)
 
-    async def _insert_into_users_cache(self, user_id: int) -> None:
-        flow_instance = DefaultUserFlow(user_id)
-        await self._redis_client.setex(str(user_id), self._store_seconds, pickle.dumps(flow_instance))
-        logger.info(f"user: {user_id} has been inserted to the cache")
+    async def is_key_in_cache(self, key: Any) -> bool:
+        return bool(await self._client.get(self._cast_key_type(key)))
 
-    async def _is_user_in_users_cache(self, user_id: int) -> bool:
-        serialized_object = await self._redis_client.get(str(user_id))
-        return bool(serialized_object)
+    async def get_value(self, key: Any) -> BaseUserFlow:
+        return pickle.loads(await self._client.get(self._cast_key_type(key)))
 
-    async def get_user_flow(self, user_id: int) -> BaseUserFlow:
-        is_user_in_cache = await self._is_user_in_users_cache(user_id)
-        if not is_user_in_cache:
-            await self._insert_into_users_cache(user_id)
-        return await self._get_cached_flow(user_id)
+    async def update_cache(self, key: Any, value: BaseUserFlow, is_serialized: bool = False) -> None:
+        if not is_serialized:
+            value = pickle.dumps(value)
+        await self._client.setex(self._cast_key_type(key), self._store_seconds, value)
+        logger.info(f"object: {key} has been inserted to the cache")
 
 
 class RedisUserLongMissingNotifier:
