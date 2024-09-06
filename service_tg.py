@@ -14,6 +14,8 @@ from dating_control.caches import RedisUserLongMissingNotifier
 from dating_control.main_flow import DefaultMainFlow
 from dating_control.utils import get_logger
 
+load_dotenv()
+
 TOKEN = os.getenv("TG_TOKEN")
 WEBHOOK_HOST = os.getenv("WEBHOOK_HOST")
 WEB_SERVER_PORT = int(os.getenv("WEB_SERVER_PORT"))
@@ -21,22 +23,20 @@ WEBHOOK_PATH = '/webhook'
 WEB_SERVER_HOST = "0.0.0.0"
 WEBHOOK_URL = f"{WEBHOOK_HOST}{WEBHOOK_PATH}"
 
-
-logger = get_logger("service_tg.py")
-main_flow_object = DefaultMainFlow(10)
-
-router = Router()
-
-bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-
-
-load_dotenv()
-
-logger = get_logger("main_flow.py")
-
 CACHE_HOST = os.getenv("CACHE_HOST")
 CACHE_STORE_SECONDS = int(os.getenv("CACHE_STORE_SECONDS"))
 CACHE_PORT = int(os.getenv("CACHE_PORT"))
+
+
+logger = get_logger("service_tg.py")
+
+
+router = Router()
+
+
+bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+
+main_flow_object = DefaultMainFlow(cache_host=CACHE_HOST, cache_port=CACHE_PORT, cache_store_seconds=CACHE_STORE_SECONDS)
 
 
 missing_cache_notifier = RedisUserLongMissingNotifier(
@@ -56,7 +56,7 @@ async def command_start_handler(message: Message) -> None:
 
 @router.message(Command("cache"))
 async def command_cache_handler(message: Message) -> None:
-    obj = main_flow_object.users_cache._redis_client.get(str(message.from_user.id))
+    obj = await main_flow_object.users_cache._redis_client.get(str(message.from_user.id))
     if obj:
         await message.answer("cache exists")
     else:
@@ -66,7 +66,7 @@ async def command_cache_handler(message: Message) -> None:
 @router.message()
 async def message_handler(message: Message) -> None:
     try:
-        response = main_flow_object.run(message.from_user.id, message.text, save=True)
+        response = await main_flow_object.run(message.from_user.id, message.text, save=True)
         await message.answer(response)
     except TypeError as ex:
         await message.answer(str(ex))
